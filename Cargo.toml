@@ -1,0 +1,46 @@
+[package]
+name = "safe-debug"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90.0"
+authors = ["C J Silverio <ceejceej@gmail.com>"]
+description = "Derives std::fmt::Debug with automatic redaction for sensitive fields marked with #[facet(sensitive)]"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ceejbot/safe-debug"
+homepage = "https://github.com/ceejbot/safe-debug"
+documentation = "https://docs.rs/safe-debug"
+keywords = ["debug", "redaction", "sensitive", "hipaa", "facet"]
+categories = ["development-tools", "encoding"]
+exclude = [
+    ".github/",
+    "docs/",
+    "*.md",
+    "!README.md",
+    "!CHANGELOG.md",
+]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+facet-macros-parse = "0.31"
+
+[dev-dependencies]
+facet = { version = "0.31", features = ["reflect"] }
+
+[[example]]
+name = "enum_example"
+path = "examples/enum_example.rs"
+
+[workspace.lints.rust]
+unsafe_code = { level = "deny", priority = 0 }
+future_incompatible = { level = "deny", priority = 1 }
+rust_2018_idioms = { level = "warn", priority = 2 }
+trivial_casts = { level = "warn", priority = 3 }
+trivial_numeric_casts = { level = "warn", priority = 4 }
+unused_lifetimes = { level = "warn", priority = 5 }
+unused_qualifications = { level = "warn", priority = 6 }
+
+[workspace.lints.clippy]
+unwrap_used = "deny"

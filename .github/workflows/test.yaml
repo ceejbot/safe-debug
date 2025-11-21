@@ -1,0 +1,84 @@
+name: "Tests"
+on:
+    push:
+        branches: ["latest"]
+        paths:
+            - src/**
+            - Cargo.toml
+            - Cargo.lock
+            - .github/workflows/test.yaml
+    pull_request:
+        branches: ["latest"]
+    workflow_dispatch:
+
+env:
+    CARGO_TERM_COLOR: always
+
+jobs:
+    test:
+        name: test (${{ matrix.rust }})
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                rust: [stable, "1.90.0", nightly]
+        steps:
+            - uses: actions/checkout@v5
+
+            - name: Install Rust toolchain
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+              with:
+                  toolchain: ${{ matrix.rust }}
+                  components: clippy
+                  cache-directories: |
+                      ~/.cargo/registry
+                      ~/.cargo/bin
+                      target
+
+            - name: consult Clippy
+              run: cargo clippy --all-targets
+
+            - name: Install cargo-nextest and cargo-llvm-cov
+              shell: bash
+              run: |
+                  if [[ -z $(which cargo-nextest) ]]; then
+                    curl -sL https://get.nexte.st/latest/linux -o nextest.tgz
+                    tar xfz nextest.tgz
+                    mv cargo-nextest /home/runner/.cargo/bin
+                  fi
+                  if [[ -z $(which cargo-llvm-cov) ]]; then
+                    curl -sL https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-x86_64-unknown-linux-gnu.tar.gz -o cargo-llvm-cov.tgz
+                    tar xfz cargo-llvm-cov.tgz
+                    mv cargo-llvm-cov /home/runner/.cargo/bin
+                  fi
+
+            - name: run the tests
+              run: cargo nextest run
+
+            - name: Run doctests
+              run: cargo test --doc
+
+            - name: Generate coverage (stable only)
+              if: matrix.rust == 'stable'
+              run: cargo llvm-cov --all-targets --workspace --lcov --output-path lcov.info
+
+            - name: Upload coverage to GitHub (stable only)
+              if: matrix.rust == 'stable'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage-report
+                  path: lcov.info
+
+    fmt:
+        name: formatting check
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+
+            - name: Install nightly Rust
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+              with:
+                  toolchain: nightly
+                  components: rustfmt
+
+            - name: check formatting
+              run: cargo +nightly fmt --check --all
