@@ -11,7 +11,7 @@
 //!
 //! ## Requirements
 //!
-//! - Must also derive or implement [`facet::Facet`]
+//! - Must also derive or implement `facet::Facet`
 //! - Sensitive fields marked with `#[facet(sensitive)]`
 //!
 //! ## Performance
@@ -53,6 +53,9 @@
 
 use facet_macros_parse::*;
 use quote::quote;
+
+/// Type alias for Results with boxed errors to avoid large error variants
+type BoxedResult<T> = std::result::Result<T, Box<facet_macros_parse::Error>>;
 
 /// Derives `std::fmt::Debug` with automatic redaction for sensitive fields.
 ///
@@ -161,11 +164,11 @@ pub fn derive_safe_debug(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     }
 }
 
-fn derive_facet_debug_impl(input: &TokenStream) -> Result<TokenStream> {
+fn derive_facet_debug_impl(input: &TokenStream) -> BoxedResult<TokenStream> {
     let mut iter = input.to_token_iter();
 
     // Parse the input as an ADT (struct or enum)
-    let adt: AdtDecl = iter.parse()?;
+    let adt: AdtDecl = iter.parse().map_err(Box::new)?;
 
     match adt {
         AdtDecl::Struct(s) => derive_for_struct(s),
@@ -244,7 +247,7 @@ macro_rules! extract_type_param_bounds {
 ///
 /// This takes a fail-safe approach: if reflection fails, ALL fields are
 /// redacted to prevent accidental data leakage.
-fn derive_for_struct(parsed: Struct) -> Result<TokenStream> {
+fn derive_for_struct(parsed: Struct) -> BoxedResult<TokenStream> {
     let struct_name = &parsed.name;
 
     // Extract generics - convert to TokenStream
@@ -297,7 +300,6 @@ fn derive_for_struct(parsed: Struct) -> Result<TokenStream> {
             // Generate field checks (when metadata is available)
             let field_checks: Vec<_> = fields
                 .content
-                .0
                 .iter()
                 .enumerate()
                 .map(|(idx, field)| {
@@ -317,7 +319,6 @@ fn derive_for_struct(parsed: Struct) -> Result<TokenStream> {
             // Generate fallback (when metadata is unavailable) - redact for safety
             let fallback_fields: Vec<_> = fields
                 .content
-                .0
                 .iter()
                 .map(|field| {
                     let field_name = &field.value.name;
@@ -352,7 +353,6 @@ fn derive_for_struct(parsed: Struct) -> Result<TokenStream> {
             // Generate field checks (when metadata is available)
             let field_checks: Vec<_> = fields
                 .content
-                .0
                 .iter()
                 .enumerate()
                 .map(|(idx, _field)| {
@@ -370,7 +370,7 @@ fn derive_for_struct(parsed: Struct) -> Result<TokenStream> {
                 .collect();
 
             // Generate fallback (when metadata is unavailable) - redact for safety
-            let fallback_fields: Vec<_> = (0..fields.content.0.len())
+            let fallback_fields: Vec<_> = (0..fields.content.len())
                 .map(|_| {
                     quote! {
                         debug_tuple.field(&"[REDACTED:NO_METADATA]");
@@ -428,7 +428,7 @@ fn derive_for_struct(parsed: Struct) -> Result<TokenStream> {
 /// The generated code takes a fail-conservative approach: if reflection
 /// fails, ONLY the enum type name is written with no variant or field data,
 /// preventing any potential data leakage.
-fn derive_for_enum(parsed: Enum) -> Result<TokenStream> {
+fn derive_for_enum(parsed: Enum) -> BoxedResult<TokenStream> {
     let enum_name = &parsed.name;
 
     // Extract generics - same as structs
@@ -467,7 +467,6 @@ fn derive_for_enum(parsed: Enum) -> Result<TokenStream> {
     let match_arms: Vec<_> = parsed
         .body
         .content
-        .0
         .iter()
         .enumerate()
         .map(|(variant_idx, variant_like)| {
@@ -485,7 +484,7 @@ fn derive_for_enum(parsed: Enum) -> Result<TokenStream> {
                 }
                 EnumVariantData::Tuple(tuple_variant) => {
                     let variant_name = &tuple_variant.name;
-                    let field_count = tuple_variant.fields.content.0.len();
+                    let field_count = tuple_variant.fields.content.len();
 
                     // Generate field bindings: _field_0, _field_1, _field_2, ...
                     let bindings: Vec<_> = (0..field_count).map(|i| quote::format_ident!("_field_{}", i)).collect();
@@ -517,7 +516,7 @@ fn derive_for_enum(parsed: Enum) -> Result<TokenStream> {
                 }
                 EnumVariantData::Struct(struct_variant) => {
                     let variant_name = &struct_variant.name;
-                    let fields = &struct_variant.fields.content.0;
+                    let fields = &struct_variant.fields.content;
 
                     // Generate field bindings: ref field1, ref field2, ...
                     let field_names: Vec<_> = fields.iter().map(|field| &field.value.name).collect();
