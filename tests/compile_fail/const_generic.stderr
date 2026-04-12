@@ -1,0 +1,36 @@
+error: unexpected `const` parameter declaration
+ --> tests/compile_fail/const_generic.rs:9:20
+  |
+9 | struct FixedBuffer<const N: usize> {
+  |                    ^^^^^^^^^^^^^^ expected a `const` expression, not a parameter declaration
+
+error: expected one of `#`, `{`, lifetime, or type, found keyword `const`
+ --> tests/compile_fail/const_generic.rs:8:17
+  |
+8 | #[derive(Facet, SafeDebug)]
+  |                 ^^^^^^^^^ expected one of `#`, `{`, lifetime, or type
+  |
+  = note: this error originates in the derive macro `SafeDebug` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: proc-macro derive produced unparsable tokens
+ --> tests/compile_fail/const_generic.rs:8:17
+  |
+8 | #[derive(Facet, SafeDebug)]
+  |                 ^^^^^^^^^
+
+error[E0277]: `FixedBuffer<4>` doesn't implement `std::fmt::Debug`
+  --> tests/compile_fail/const_generic.rs:20:22
+   |
+20 |     println!("{:?}", buf);
+   |               ----   ^^^ `FixedBuffer<4>` cannot be formatted using `{:?}` because it doesn't implement `std::fmt::Debug`
+   |               |
+   |               required by this formatting parameter
+   |
+   = help: the trait `std::fmt::Debug` is not implemented for `FixedBuffer<4>`
+   = note: add `#[derive(Debug)]` to `FixedBuffer<4>` or manually `impl std::fmt::Debug for FixedBuffer<4>`
+   = note: this error originates in the macro `$crate::format_args_nl` which comes from the expansion of the macro `println` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider annotating `FixedBuffer<4>` with `#[derive(Debug)]`
+   |
+ 9 + #[derive(Debug)]
+10 | struct FixedBuffer<const N: usize> {
+   |

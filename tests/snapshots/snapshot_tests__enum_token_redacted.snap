@@ -1,0 +1,5 @@
+---
+source: tests/snapshot_tests.rs
+expression: "format!(\"{:?}\", token)"
+---
+ApiResponse::Token("[REDACTED]")

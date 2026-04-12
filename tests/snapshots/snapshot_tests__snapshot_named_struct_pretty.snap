@@ -1,0 +1,10 @@
+---
+source: tests/snapshot_tests.rs
+expression: "format!(\"{:#?}\", record)"
+---
+PatientRecord {
+    id: "P-12345",
+    name: "Jane Doe",
+    ssn: "[REDACTED]",
+    medical_history: "[REDACTED]",
+}

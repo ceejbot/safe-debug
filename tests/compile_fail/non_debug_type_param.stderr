@@ -1,0 +1,56 @@
+error[E0277]: `NotDebug` doesn't implement `std::fmt::Debug`
+  --> tests/compile_fail/non_debug_type_param.rs:15:22
+   |
+15 |     println!("{:?}", c);
+   |               ----   ^ `NotDebug` cannot be formatted using `{:?}` because it doesn't implement `std::fmt::Debug`
+   |               |
+   |               required by this formatting parameter
+   |
+   = help: the trait `std::fmt::Debug` is not implemented for `NotDebug`
+   = note: add `#[derive(Debug)]` to `NotDebug` or manually `impl std::fmt::Debug for NotDebug`
+help: the trait `std::fmt::Debug` is implemented for `Container<T>`
+  --> tests/compile_fail/non_debug_type_param.rs:7:17
+   |
+ 7 | #[derive(Facet, SafeDebug)]
+   |                 ^^^^^^^^^
+note: required for `Container<NotDebug>` to implement `std::fmt::Debug`
+  --> tests/compile_fail/non_debug_type_param.rs:7:17
+   |
+ 7 | #[derive(Facet, SafeDebug)]
+   |                 ^^^^^^^^^ unsatisfied trait bound introduced in this `derive` macro
+   = note: this error originates in the macro `$crate::format_args_nl` which comes from the expansion of the derive macro `SafeDebug` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider annotating `NotDebug` with `#[derive(Debug)]`
+   |
+ 5 + #[derive(Debug)]
+ 6 | struct NotDebug;
+   |
+
+error[E0277]: the trait bound `for<'__facet> NotDebug: Facet<'__facet>` is not satisfied
+  --> tests/compile_fail/non_debug_type_param.rs:15:22
+   |
+15 |     println!("{:?}", c);
+   |               ----   ^ unsatisfied trait bound
+   |               |
+   |               required by this formatting parameter
+   |
+help: the trait `for<'__facet> Facet<'__facet>` is not implemented for `NotDebug`
+  --> tests/compile_fail/non_debug_type_param.rs:5:1
+   |
+ 5 | struct NotDebug;
+   | ^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `Facet<'facet>`:
+             `&'a T` implements `Facet<'a>`
+             `&'a mut T` implements `Facet<'a>`
+             `()` implements `Facet<'_>`
+             `(T0, T1)` implements `Facet<'a>`
+             `(T0, T1, T2)` implements `Facet<'a>`
+             `(T0, T1, T2, T3)` implements `Facet<'a>`
+             `(T0,)` implements `Facet<'a>`
+             `*const T` implements `Facet<'a>`
+           and $N others
+note: required for `Container<NotDebug>` to implement `std::fmt::Debug`
+  --> tests/compile_fail/non_debug_type_param.rs:7:17
+   |
+ 7 | #[derive(Facet, SafeDebug)]
+   |                 ^^^^^^^^^ unsatisfied trait bound introduced in this `derive` macro
+   = note: this error originates in the macro `$crate::format_args_nl` which comes from the expansion of the derive macro `SafeDebug` (in Nightly builds, run with -Z macro-backtrace for more info)

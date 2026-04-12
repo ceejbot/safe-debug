@@ -1,0 +1,11 @@
+---
+source: tests/snapshot_tests.rs
+expression: "format!(\"{:#?}\", data)"
+---
+Outer {
+    id: 999,
+    inner: Inner {
+        public_data: "visible-info",
+        secret_data: "[REDACTED]",
+    },
+}

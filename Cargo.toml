@@ -27,7 +27,9 @@ quote = "1.0"
 facet-macros-parse = "0.31"
 
 [dev-dependencies]
-facet = { version = "0.43.2", features = ["reflect"] }
+facet = { version = "0.44", features = ["reflect"] }
+insta = "1"
+trybuild = { version = "1", features = ["diff"] }
 
 [[example]]
 name = "enum_example"

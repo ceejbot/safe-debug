@@ -1,0 +1,5 @@
+---
+source: tests/snapshot_tests.rs
+expression: "format!(\"{:?}\", success)"
+---
+ApiResponse::Success { code: 200, data: "OK" }

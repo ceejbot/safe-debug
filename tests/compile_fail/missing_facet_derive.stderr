@@ -1,0 +1,20 @@
+error: cannot find attribute `facet` in this scope
+ --> tests/compile_fail/missing_facet_derive.rs:7:7
+  |
+7 |     #[facet(sensitive)]
+  |       ^^^^^
+  |
+  = note: `facet` is in scope, but it is a crate, not an attribute
+
+error[E0599]: no associated item named `SHAPE` found for struct `MissingFacet` in the current scope
+ --> tests/compile_fail/missing_facet_derive.rs:4:10
+  |
+4 | #[derive(SafeDebug)]
+  |          ^^^^^^^^^ associated item not found in `MissingFacet`
+5 | struct MissingFacet {
+  | ------------------- associated item `SHAPE` not found for this struct
+  |
+  = help: items from traits can only be used if the trait is implemented and in scope
+  = note: the following trait defines an item `SHAPE`, perhaps you need to implement it:
+          candidate #1: `Facet`
+  = note: this error originates in the derive macro `SafeDebug` (in Nightly builds, run with -Z macro-backtrace for more info)
